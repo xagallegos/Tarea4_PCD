@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from fastapi import FastAPI, HTTPException, Depends
 from typing import List, Union
 import models
@@ -7,8 +7,8 @@ from sqlalchemy.orm import Session
 import uvicorn
 
 app = FastAPI()
-
 models.Base.metadata.create_all(bind=engine)
+
 
 def get_db():
     try:
@@ -16,6 +16,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 class User(BaseModel):
     user_name: str
@@ -26,8 +27,7 @@ class User(BaseModel):
 
 
 @app.post('/')
-def create_user(user:User, db:Session = Depends(get_db)):
-
+def create_user(user: User, db: Session = Depends(get_db)):
     existing_user = db.query(models.Users).filter(models.Users.user_email == user.user_email).first()
 
     if existing_user:
@@ -35,7 +35,6 @@ def create_user(user:User, db:Session = Depends(get_db)):
             status_code=400,
             detail=f"Already existing user with {user.user_email} email."
         )
-
 
     user_model = models.Users()
     user_model.user_name = user.user_name
@@ -52,7 +51,6 @@ def create_user(user:User, db:Session = Depends(get_db)):
 
 @app.put('/{user_id}')
 def update_user(user_id: int, user: User, db: Session = Depends(get_db)):
-
     user_model = db.query(models.Users).filter(models.Users.user_id == user_id).first()
 
     if user_model is None:
@@ -90,9 +88,9 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
     return user_model
 
+
 @app.delete("/{user_id}")
 def delete_user(user_id: int, db: Session = Depends(get_db)):
-
     user_model = db.query(models.Users).filter(models.Users.user_id == user_id).first()
 
     if user_model is None:
@@ -104,6 +102,7 @@ def delete_user(user_id: int, db: Session = Depends(get_db)):
     db.query(models.Users).filter(models.Users.user_id == user_id).delete()
 
     db.commit()
+
 
 if __name__ == "__main__":
     uvicorn.run('main:app', host="0.0.0.0", port=5000, log_level="info", reload=True)
