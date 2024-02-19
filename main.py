@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException, Depends
-from typing import Union
+from typing import List, Union
 import models
 from database import engine, SessionLocal
 from sqlalchemy.orm import Session
@@ -21,13 +21,8 @@ class User(BaseModel):
     user_name: str
     user_email: str
     age: Union[int, None] = None
-    recommendations: [str]
+    recommendations: List[str]
     ZIP: Union[int, None] = None
-
-
-class Recommendations(BaseModel):
-    user_id: int
-    recommendation_text: str
 
 
 @app.post('/')
@@ -81,6 +76,8 @@ def update_user(user_id: int, user: User, db: Session = Depends(get_db)):
 @app.get("/")
 def get_all(db: Session = Depends(get_db)):
     return db.query(models.Users).all()
+
+
 @app.get('/{user_id}')
 def get_user(user_id: int, db: Session = Depends(get_db)):
     user_model = db.query(models.Users).filter(models.Users.user_id == user_id).first()
